@@ -136,6 +136,11 @@ h1 {
   align-items: center;
 }
 
+.head.no-peso,
+.row.no-peso {
+  grid-template-columns: 1fr 76px 36px;
+}
+
 .head {
   font-size: 0.85rem;
   color: var(--muted);
@@ -146,7 +151,8 @@ h1 {
   margin-bottom: 8px;
 }
 
-input {
+input,
+select {
   width: 100%;
   min-width: 0;
   font: inherit;
@@ -158,6 +164,7 @@ input {
 }
 
 input:focus-visible,
+select:focus-visible,
 button:focus-visible {
   outline: 3px solid var(--mark);
   outline-offset: 1px;
@@ -231,6 +238,10 @@ label {
   .row {
     grid-template-columns: 1fr 1fr 36px;
     align-items: end;
+  }
+
+  .row.no-peso {
+    grid-template-columns: 1fr 36px;
   }
 
   .row > input:first-child {
