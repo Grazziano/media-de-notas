@@ -67,9 +67,18 @@ export default function App() {
     <main>
       <h1>Média de notas</h1>
 
-      <section className="result" aria-live="polite">
+      <section
+        className={`result${media === null ? "" : media >= min ? " is-ok" : " is-bad"}`}
+        aria-live="polite"
+      >
+        <p className="kicker">Média ponderada</p>
         {media === null ? (
-          <p className="hint">Digite ao menos uma nota para ver a média.</p>
+          <>
+            <span className="big ghost" aria-hidden="true">
+              0,00
+            </span>
+            <p className="hint">Digite ao menos uma nota para ver a média.</p>
+          </>
         ) : (
           <>
             <span className="big">{fmt(media)}</span>
@@ -98,19 +107,25 @@ export default function App() {
                 aria-label="Nome da avaliação"
                 onChange={(e) => update(r.id, "nome", e.target.value)}
               />
-              <input
-                value={r.nota}
-                inputMode="decimal"
-                placeholder="0–10"
-                aria-label={`Nota de ${r.nome}`}
-                onChange={(e) => update(r.id, "nota", e.target.value)}
-              />
-              <input
-                value={r.peso}
-                inputMode="decimal"
-                aria-label={`Peso de ${r.nome}`}
-                onChange={(e) => update(r.id, "peso", e.target.value)}
-              />
+              <label className="field">
+                <span className="field-label">Nota</span>
+                <input
+                  value={r.nota}
+                  inputMode="decimal"
+                  placeholder="0–10"
+                  aria-label={`Nota de ${r.nome}`}
+                  onChange={(e) => update(r.id, "nota", e.target.value)}
+                />
+              </label>
+              <label className="field">
+                <span className="field-label">Peso</span>
+                <input
+                  value={r.peso}
+                  inputMode="decimal"
+                  aria-label={`Peso de ${r.nome}`}
+                  onChange={(e) => update(r.id, "peso", e.target.value)}
+                />
+              </label>
               <button
                 className="del"
                 aria-label={`Remover ${r.nome}`}

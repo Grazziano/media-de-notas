@@ -49,18 +49,39 @@ main {
 }
 
 h1 {
-  font-size: 1rem;
-  font-weight: 600;
-  margin: 0 0 12px;
-  color: var(--muted);
+  font-size: 1.75rem;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin: 0 0 16px;
+  color: var(--ink);
 }
 
 .result {
   background: var(--card);
   border: 1px solid var(--line);
+  border-left: 4px solid var(--line);
   border-radius: 18px;
   padding: 22px 20px;
   margin-bottom: 16px;
+}
+
+.result.is-ok {
+  background: color-mix(in srgb, var(--ok) 12%, var(--card));
+  border-color: color-mix(in srgb, var(--ok) 35%, var(--line));
+  border-left-color: var(--ok);
+}
+
+.result.is-bad {
+  background: color-mix(in srgb, var(--bad) 12%, var(--card));
+  border-color: color-mix(in srgb, var(--bad) 35%, var(--line));
+  border-left-color: var(--bad);
+}
+
+.kicker {
+  margin: 0 0 8px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
 }
 
 .big {
@@ -71,6 +92,12 @@ h1 {
   display: inline-block;
   padding: 0 6px;
   background: linear-gradient(transparent 62%, var(--mark) 62%);
+}
+
+.big.ghost {
+  color: var(--muted);
+  opacity: 0.4;
+  background: none;
 }
 
 .status {
@@ -149,9 +176,13 @@ button {
 button.add {
   width: 100%;
   font-weight: 600;
-  background: var(--ink);
-  color: var(--bg);
-  border-color: var(--ink);
+  background: transparent;
+  color: var(--ink);
+  border-color: var(--line);
+}
+
+button.add:hover {
+  background: var(--bg);
 }
 
 button.del {
@@ -172,6 +203,48 @@ label {
   margin-bottom: 4px;
 }
 
+.field {
+  display: block;
+  min-width: 0;
+  margin-bottom: 0;
+  font-size: inherit;
+  color: inherit;
+}
+
+.field-label {
+  display: none;
+}
+
 .scroll {
   overflow-x: auto;
+}
+
+@media (max-width: 480px) {
+  .big {
+    font-size: 4.25rem;
+  }
+
+  .head {
+    display: none;
+  }
+
+  .row {
+    grid-template-columns: 1fr 1fr 36px;
+    align-items: end;
+  }
+
+  .row > input:first-child {
+    grid-column: 1 / -1;
+  }
+
+  .field-label {
+    display: block;
+    font-size: 0.75rem;
+    color: var(--muted);
+    margin-bottom: 4px;
+  }
+
+  .opts {
+    grid-template-columns: 1fr;
+  }
 }
