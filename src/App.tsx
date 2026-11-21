@@ -14,6 +14,13 @@ type Linha = {
   p: number | null;
 };
 
+type AvaliacaoCalc = Avaliacao & {
+  n: number | null;
+  p: number | null;
+  erroNota: string | null;
+  erroPeso: string | null;
+};
+
 type TipoMedia = "simples" | "ponderada" | "geometrica" | "harmonica";
 
 const TIPOS: { id: TipoMedia; label: string; kicker: string }[] = [
@@ -32,8 +39,10 @@ const TIPOS: { id: TipoMedia; label: string; kicker: string }[] = [
 ];
 
 const num = (v: string): number | null => {
-  const n = parseFloat(String(v).replace(",", "."));
-  return isNaN(n) ? null : n;
+  const texto = String(v).trim().replace(",", ".");
+  if (texto === "") return null;
+  const n = Number(texto);
+  return Number.isFinite(n) ? n : null;
 };
 const fmt = (n: number): string => n.toFixed(2).replace(".", ",");
 const fmtPeso = (n: number): string => fmt(n).replace(",00", "");
@@ -129,13 +138,50 @@ export default function App() {
     ]);
   const remove = (id: number) => setRows((rs) => rs.filter((r) => r.id !== id));
 
-  const dados: Linha[] = rows
-    .map((r) => ({ n: num(r.nota), p: num(r.peso) }))
-    .filter((r): r is Linha => r.n !== null);
+  const avaliacoes: AvaliacaoCalc[] = rows.map((r) => {
+    const notaVazia = r.nota.trim() === "";
+    const n = num(r.nota);
+    let erroNota: string | null = null;
+    if (!notaVazia) {
+      if (n === null) erroNota = "Nota inválida.";
+      else if (n < 0 || n > 10) erroNota = "A nota deve estar entre 0 e 10.";
+    }
+
+    let p: number | null = 1;
+    let erroPeso: string | null = null;
+    if (usaPeso) {
+      const peso = num(r.peso);
+      if (r.peso.trim() === "") {
+        p = null;
+        if (!notaVazia) erroPeso = "Informe o peso desta avaliação.";
+      } else if (peso === null || peso <= 0) {
+        p = null;
+        erroPeso = "O peso deve ser maior que zero.";
+      } else {
+        p = peso;
+      }
+    }
+
+    return { ...r, n, p, erroNota, erroPeso };
+  });
+
+  const dados: Linha[] = avaliacoes
+    .filter(
+      (a): a is AvaliacaoCalc & { n: number } =>
+        a.n !== null && a.erroNota === null && a.erroPeso === null,
+    )
+    .map((a) => ({ n: a.n, p: a.p }));
 
   const media = calcularMedia(tipo, dados);
-  const min = num(minima) ?? 6;
-  const q = usaPeso ? num(pesoProx) : 1;
+  const minValor = num(minima);
+  const minValido = minValor !== null && minValor > 0;
+  const min = minValido ? minValor : 6;
+  const minErro = minValido
+    ? null
+    : `Informe um número maior que zero. Usando ${fmt(6)} no cálculo.`;
+  const qValor = usaPeso ? num(pesoProx) : 1;
+  const q = qValor !== null && qValor > 0 ? qValor : null;
+  const qErro = usaPeso && q === null ? "Informe um peso maior que zero." : null;
   const precisa = media !== null ? calcularPrecisa(tipo, dados, min, q) : null;
 
   let dica: string | null = null;
@@ -199,43 +245,58 @@ export default function App() {
             {usaPeso && <span>Peso</span>}
             <span />
           </div>
-          {rows.map((r) => (
-            <div className={`row${usaPeso ? "" : " no-peso"}`} key={r.id}>
-              <input
-                value={r.nome}
-                aria-label="Nome da avaliação"
-                onChange={(e) => update(r.id, "nome", e.target.value)}
-              />
-              <label className="field">
-                <span className="field-label">Nota</span>
+          {avaliacoes.map((a) => {
+            const erroId = `erro-${a.id}`;
+            const erro = a.erroNota ?? a.erroPeso;
+            return (
+              <div className={`row${usaPeso ? "" : " no-peso"}`} key={a.id}>
                 <input
-                  value={r.nota}
-                  inputMode="decimal"
-                  placeholder="0–10"
-                  aria-label={`Nota de ${r.nome}`}
-                  onChange={(e) => update(r.id, "nota", e.target.value)}
+                  value={a.nome}
+                  aria-label="Nome da avaliação"
+                  onChange={(e) => update(a.id, "nome", e.target.value)}
                 />
-              </label>
-              {usaPeso && (
                 <label className="field">
-                  <span className="field-label">Peso</span>
+                  <span className="field-label">Nota</span>
                   <input
-                    value={r.peso}
+                    value={a.nota}
                     inputMode="decimal"
-                    aria-label={`Peso de ${r.nome}`}
-                    onChange={(e) => update(r.id, "peso", e.target.value)}
+                    placeholder="0–10"
+                    className={a.erroNota ? "is-invalid" : undefined}
+                    aria-label={`Nota de ${a.nome}`}
+                    aria-invalid={a.erroNota !== null || undefined}
+                    aria-describedby={erro ? erroId : undefined}
+                    onChange={(e) => update(a.id, "nota", e.target.value)}
                   />
                 </label>
-              )}
-              <button
-                className="del"
-                aria-label={`Remover ${r.nome}`}
-                onClick={() => remove(r.id)}
-              >
-                ✕
-              </button>
-            </div>
-          ))}
+                {usaPeso && (
+                  <label className="field">
+                    <span className="field-label">Peso</span>
+                    <input
+                      value={a.peso}
+                      inputMode="decimal"
+                      className={a.erroPeso ? "is-invalid" : undefined}
+                      aria-label={`Peso de ${a.nome}`}
+                      aria-invalid={a.erroPeso !== null || undefined}
+                      aria-describedby={erro ? erroId : undefined}
+                      onChange={(e) => update(a.id, "peso", e.target.value)}
+                    />
+                  </label>
+                )}
+                <button
+                  className="del"
+                  aria-label={`Remover ${a.nome}`}
+                  onClick={() => remove(a.id)}
+                >
+                  ✕
+                </button>
+                {erro && (
+                  <p className="row-error" id={erroId}>
+                    {erro}
+                  </p>
+                )}
+              </div>
+            );
+          })}
         </div>
         <button className="add" onClick={add}>
           Adicionar avaliação
@@ -263,8 +324,16 @@ export default function App() {
             id="min"
             value={minima}
             inputMode="decimal"
+            className={minErro ? "is-invalid" : undefined}
+            aria-invalid={minErro !== null || undefined}
+            aria-describedby={minErro ? "min-erro" : undefined}
             onChange={(e) => setMinima(e.target.value)}
           />
+          {minErro && (
+            <p className="field-error" id="min-erro">
+              {minErro}
+            </p>
+          )}
         </div>
         {usaPeso && (
           <div>
@@ -273,8 +342,16 @@ export default function App() {
               id="pp"
               value={pesoProx}
               inputMode="decimal"
+              className={qErro ? "is-invalid" : undefined}
+              aria-invalid={qErro !== null || undefined}
+              aria-describedby={qErro ? "pp-erro" : undefined}
               onChange={(e) => setPesoProx(e.target.value)}
             />
+            {qErro && (
+              <p className="field-error" id="pp-erro">
+                {qErro}
+              </p>
+            )}
           </div>
         )}
       </section>

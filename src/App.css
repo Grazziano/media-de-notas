@@ -222,6 +222,27 @@ label {
   display: none;
 }
 
+input.is-invalid {
+  border-color: var(--bad);
+}
+
+.row-error,
+.field-error {
+  margin: 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--bad);
+}
+
+.row-error {
+  grid-column: 1 / -1;
+}
+
+.field-error {
+  margin-top: 4px;
+  font-weight: 400;
+}
+
 .scroll {
   overflow-x: auto;
 }
